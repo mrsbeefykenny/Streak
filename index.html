@@ -341,9 +341,15 @@
   const DB_URL = "https://streak-counter-e6a00-default-rtdb.firebaseio.com";
   // =====================================================================
 
-  const ROOT = "streak";                              // where the days live in the database
-  const CACHE_KEY = "streak-counter-v3";              // this browser's copy, for a fast first paint
-  const UPLOADED_KEY = "streak-counter-v3-uploaded";  // set once this browser's old days were sent up
+  // One file, several separate streaks: add ?s=name to the link for another streak,
+  // for example .../Streak/?s=us . The plain link without ?s= is the original streak.
+  let NAME = "";
+  try { NAME = (new URLSearchParams(location.search).get("s") || "").toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 40); } catch (e) {}
+  const SUFFIX = NAME ? "-" + NAME : "";
+
+  const ROOT = NAME ? "streak/shared/" + NAME : "streak";      // where the days live in the database
+  const CACHE_KEY = "streak-counter-v3" + SUFFIX;              // this browser's copy, for a fast first paint
+  const UPLOADED_KEY = "streak-counter-v3-uploaded" + SUFFIX;  // set once this browser's old days were sent up
   const V2_KEY = "streak-counter-v2";
   const V1_KEY = "streak-counter-v1";
   const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -370,8 +376,9 @@
   let bestBase = 0;        // best streak carried over from the very first version of this counter
 
   function loadLocal() {
-    const s = parse(lsGet(CACHE_KEY)) || parse(lsGet(V2_KEY));
+    const s = parse(lsGet(CACHE_KEY)) || (NAME ? null : parse(lsGet(V2_KEY)));
     if (s && Array.isArray(s.done)) { bestBase = +s.bestBase || 0; done = clean(s.done); return; }
+    if (NAME) return;                                   // a named streak never takes over the old personal days
     const old = parse(lsGet(V1_KEY));                   // oldest format: a count plus a few days
     if (old && Array.isArray(old.done)) {
       const days = clean(old.done);
