@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>🌵</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #191919;
+    --pink: #f2a7c3;
+    --green: #7fd1a0;
+    --green-dim: #3d7a5c;
+    --text: #f3e8ee;
+    --muted: #8fb09f;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; background: var(--bg); }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid rgba(127, 209, 160, .22);
+    border-radius: 18px;
+    padding: 20px 22px 18px;
+    text-align: center;
+  }
+
+  .label {
+    font-size: 10px;
+    letter-spacing: 1.6px;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+
+  .counter {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 10px 0 6px;
+  }
+
+  .btn {
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid var(--green-dim);
+    background: transparent;
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease, opacity .15s ease;
+  }
+  .btn svg { width: 18px; height: 18px; }
+  .btn:hover { background: rgba(127, 209, 160, .16); border-color: var(--green); }
+  .btn:active { transform: scale(.93); }
+  .btn:focus-visible, .cell:focus-visible, .nav button:focus-visible { outline: 2px solid var(--pink); outline-offset: 3px; }
+  .btn:disabled { opacity: .3; cursor: default; background: transparent; border-color: var(--green-dim); transform: none; }
+  #plus:hover:not(:disabled) { background: rgba(242, 167, 195, .16); border-color: var(--pink); color: var(--pink); }
+
+  .center { flex: 1; min-width: 0; }
+
+  /* longest streak, top-left corner */
+  .best {
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    text-align: left;
+    line-height: 1;
+  }
+  .best .b-label {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .best .b-num {
+    display: block;
+    margin-top: 4px;
+    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    font-size: 24px;
+    color: var(--pink);
+  }
+
+  .flame {
+    width: 86px;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+    overflow: visible;
+    filter: drop-shadow(0 0 14px rgba(242, 167, 195, .5));
+    transition: filter .3s ease;
+  }
+  .flame .flick {
+    transform-origin: 32px 74px;
+    animation: flick 1.7s ease-in-out infinite;
+  }
+  @keyframes flick {
+    0%, 100% { transform: scale(1, 1) rotate(0deg); }
+    25%      { transform: scale(1.03, .97) rotate(-1.6deg); }
+    55%      { transform: scale(.97, 1.04) rotate(1.3deg); }
+    80%      { transform: scale(1.02, .98) rotate(-.7deg); }
+  }
+  .flame.off { filter: none; }
+  .flame.off .flick { animation: none; }
+  .flame.off .outer { fill: rgba(127, 209, 160, .06); stroke: var(--green-dim); stroke-width: 2; stroke-dasharray: 3 4; }
+  .flame.off .inner { display: none; }
+
+  .num {
+    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+    font-weight: 500;
+    font-size: 60px;
+    line-height: 1;
+    margin-top: 4px;
+    color: var(--text);
+  }
+  .num.bump { animation: bump .3s ease; }
+  @keyframes bump { 40% { transform: scale(1.12); } }
+
+  .unit {
+    margin-top: 2px;
+    font-size: 10px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .status {
+    min-height: 2.6em;
+    margin: 12px 0 12px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--muted);
+  }
+  .status.warn { color: var(--pink); }
+  .status.good { color: var(--green); }
+
+  /* date range + back/forward arrows */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .nav button {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid var(--green-dim);
+    background: transparent;
+    color: var(--green);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    transition: background .15s ease, opacity .15s ease;
+  }
+  .nav button svg { width: 12px; height: 12px; }
+  .nav button:hover:not(:disabled) { background: rgba(127, 209, 160, .16); }
+  .nav button:disabled { opacity: .25; cursor: default; }
+  .range { font-size: 11px; letter-spacing: .4px; color: var(--muted); }
+
+  .strip { display: flex; gap: 4px; }
+  .cell {
+    flex: 1;
+    min-width: 0;
+    height: 42px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    border-radius: 10px;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid #2f3a33;
+    color: #46544b;
+    transition: background .12s ease, border-color .12s ease, transform .1s ease;
+  }
+  .cell .wd { font-size: 7.5px; text-transform: uppercase; opacity: .75; }
+  .cell .dn { font-size: 10px; }
+  .cell:hover { border-color: var(--green); transform: translateY(-2px); }
+  .cell:active { transform: scale(.94); }
+
+  .cell.done {
+    background: rgba(127, 209, 160, .2);
+    border-color: rgba(127, 209, 160, .55);
+    color: var(--green);
+  }
+  .cell.missed {
+    background: rgba(242, 167, 195, .08);
+    border-color: rgba(242, 167, 195, .5);
+    color: var(--pink);
+  }
+  .cell.missed .dn { text-decoration: line-through; }
+  .cell.now {
+    border-color: var(--pink);
+    color: var(--pink);
+    box-shadow: 0 0 10px rgba(242, 167, 195, .4);
+  }
+  .cell.now.done { background: rgba(127, 209, 160, .24); color: var(--green); }
+
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 10px;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .legend .l-done { background: var(--green); }
+  .legend .l-missed { border: 1px solid var(--pink); }
+  .legend .l-now { background: var(--pink); box-shadow: 0 0 6px rgba(242, 167, 195, .6); }
+
+  .note { margin: 6px 0 0; font-size: 10px; color: var(--pink); opacity: .8; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flame .flick, .num.bump { animation: none; }
+    .cell { transition: none; }
+  }
+
+  /* follows the device or browser setting: light colors when it is set to light mode */
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #ffffff;           /* Notion's light page color */
+      --pink: #d9558a;
+      --green: #2f9a63;
+      --green-dim: #9fd0b4;    /* soft outlines */
+      --text: #2f2f2d;
+      --muted: #6f8a7a;
+    }
+    .card { border-color: rgba(47, 154, 99, .3); }
+    .btn:hover, .nav button:hover:not(:disabled) { background: rgba(47, 154, 99, .12); }
+    #plus:hover:not(:disabled) { background: rgba(217, 85, 138, .12); }
+    .flame { filter: drop-shadow(0 0 12px rgba(217, 85, 138, .35)); }
+    .flame.off .outer { fill: rgba(47, 154, 99, .06); }
+    #fo stop:nth-child(1) { stop-color: #f7a8c4; }
+    #fo stop:nth-child(2) { stop-color: #e2679c; }
+    #fo stop:nth-child(3) { stop-color: #c23d7c; }
+    #fi stop:nth-child(1) { stop-color: #ffe3ee; }
+    #fi stop:nth-child(2) { stop-color: #f7a8c4; }
+    .cell { border-color: #d9e8df; color: #9bb3a5; }
+    .cell.done { background: rgba(47, 154, 99, .14); border-color: rgba(47, 154, 99, .5); }
+    .cell.missed { background: rgba(217, 85, 138, .07); border-color: rgba(217, 85, 138, .45); }
+    .cell.now { box-shadow: 0 0 10px rgba(217, 85, 138, .3); }
+    .cell.now.done { background: rgba(47, 154, 99, .2); }
+    .legend .l-now { box-shadow: 0 0 6px rgba(217, 85, 138, .45); }
+  }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="best" title="Your longest streak so far">
+      <span class="b-label">Best</span>
+      <span class="b-num" id="best">0</span>
+    </div>
+
+    <div class="label">Streak</div>
+
+    <div class="counter">
+      <button class="btn" id="minus" type="button" aria-label="Undo the latest logged day">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14"/></svg>
+      </button>
+
+      <div class="center">
+        <svg class="flame off" id="flame" viewBox="0 0 64 80" aria-hidden="true">
+          <defs>
+            <linearGradient id="fo" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffd6e6"/>
+              <stop offset=".45" stop-color="#f2a7c3"/>
+              <stop offset="1" stop-color="#df6a9e"/>
+            </linearGradient>
+            <linearGradient id="fi" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#fff4f8"/>
+              <stop offset="1" stop-color="#ffcfe1"/>
+            </linearGradient>
+          </defs>
+          <g class="flick">
+            <path class="outer" fill="url(#fo)" d="M32 3 C34 15 52 26 52 47 C52 63 43 74 32 74 C21 74 12 63 12 47 C12 38 17 31 21 26 C22 33 26 36 29 37 C27 25 28 12 32 3 Z"/>
+            <path class="inner" fill="url(#fi)" d="M32 34 C33 42 42 48 42 58 C42 66 37 72 32 72 C27 72 22 66 22 58 C22 52 26 49 28 45 C29 49 31 50 32 49 C31 44 31 39 32 34 Z"/>
+          </g>
+        </svg>
+        <div class="num" id="num" aria-live="polite">0</div>
+        <div class="unit" id="unit">days</div>
+      </div>
+
+      <button class="btn" id="plus" type="button" aria-label="Mark today as done">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+    </div>
+
+    <p class="status" id="status" aria-live="polite"></p>
+
+    <div class="nav">
+      <button id="older" type="button" aria-label="Show earlier days">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <span class="range" id="range"></span>
+      <button id="newer" type="button" aria-label="Show later days">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+
+    <div class="strip" id="strip"></div>
+    <div class="legend">
+      <span><i class="l-done"></i>done</span>
+      <span><i class="l-missed"></i>missed</span>
+      <span><i class="l-now"></i>today</span>
+    </div>
+
+    <p class="note" id="note" hidden>Saving isn't available here, so your days are lost when you close this page.</p>
+  </main>
+
+<script>
+(function () {
+  // =====================================================================
+  //  PASTE YOUR FIREBASE DATABASE URL BETWEEN THE QUOTES BELOW
+  //  It looks like  https://your-project-default-rtdb.firebaseio.com
+  // =====================================================================
+  const DB_URL = "https://streak-counter-e6a00-default-rtdb.firebaseio.com";
+  // =====================================================================
+
+  const ROOT = "streak";                              // where the days live in the database
+  const CACHE_KEY = "streak-counter-v3";              // this browser's copy, for a fast first paint
+  const UPLOADED_KEY = "streak-counter-v3-uploaded";  // set once this browser's old days were sent up
+  const V2_KEY = "streak-counter-v2";
+  const V1_KEY = "streak-counter-v1";
+  const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+  const base = DB_URL.trim().replace(/\/+$/, "");
+  const online = /^https:\/\/.+/.test(base);          // false until the URL above is filled in
+  let syncErr = false;                                // true when the database can't be reached
+  let pending = 0;                                    // writes still on their way
+
+  // ---------- dates (all in your local time) ----------
+  const pad = n => String(n).padStart(2, "0");
+  const keyOf = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const dayNum = k => { const p = k.split("-").map(Number); return Date.UTC(p[0], p[1] - 1, p[2]) / 86400000; };
+  const daysAgo = n => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate() - n); };
+  const keyFromNum = n => { const d = new Date(n * 86400000); return d.getUTCFullYear() + "-" + pad(d.getUTCMonth() + 1) + "-" + pad(d.getUTCDate()); };
+
+  // ---------- this browser's storage (cache + the old saved streak) ----------
+  const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const parse = raw => { try { return raw ? JSON.parse(raw) : null; } catch (e) { return null; } };
+  const clean = list => Array.from(new Set(list.filter(k => typeof k === "string" && DAY.test(k)))).sort();
+
+  let done = [];           // the logged days, sorted
+  let bestBase = 0;        // best streak carried over from the very first version of this counter
+
+  function loadLocal() {
+    const s = parse(lsGet(CACHE_KEY)) || parse(lsGet(V2_KEY));
+    if (s && Array.isArray(s.done)) { bestBase = +s.bestBase || 0; done = clean(s.done); return; }
+    const old = parse(lsGet(V1_KEY));                   // oldest format: a count plus a few days
+    if (old && Array.isArray(old.done)) {
+      const days = clean(old.done);
+      bestBase = +old.best || 0;
+      const streak = +old.streak || 0;
+      if (streak > 0) {
+        const lastNum = dayNum(days.length ? days[days.length - 1] : keyOf(daysAgo(1)));
+        for (let i = 0; i < streak; i++) days.push(keyFromNum(lastNum - i));
+      }
+      done = clean(days);
+    }
+  }
+  const cache = () => lsSet(CACHE_KEY, JSON.stringify({ done: done, bestBase: bestBase }));
+
+  // ---------- the shared database ----------
+  const url = p => base + "/" + ROOT + (p ? "/" + p : "") + ".json";
+  async function req(method, p, body) {
+    const r = await fetch(url(p), { method: method, body: body === undefined ? undefined : JSON.stringify(body) });
+    if (!r.ok) throw new Error("database answered " + r.status);
+    return r.json();
+  }
+
+  function applyRemote(data) {
+    if (pending > 0) return;                            // a change of ours is still being saved
+    const map = data && data.done && typeof data.done === "object" ? data.done : {};
+    done = clean(Object.keys(map).filter(k => map[k]));
+    bestBase = (data && +data.bestBase) || 0;
+    syncErr = false;
+    cache();
+    render(false);
+  }
+  async function pull() {
+    if (!online) return;
+    try { applyRemote(await req("GET", "")); }
+    catch (e) { syncErr = true; render(false); }
+  }
+
+  function setLocal(k, on) {
+    const i = done.indexOf(k);
+    if (on && i === -1) done.push(k);
+    if (!on && i !== -1) done.splice(i, 1);
+    done.sort();
+    cache();
+  }
+
+  // change one day here straight away, then save it for everyone
+  async function setDay(k, on) {
+    const was = done.indexOf(k) !== -1;
+    if (was === on) return;
+    setLocal(k, on);
+    render(true);
+    if (!online) return;
+    pending++;
+    let failed = false;
+    try { await (on ? req("PUT", "done/" + k, true) : req("DELETE", "done/" + k)); }
+    catch (e) { failed = true; }
+    pending--;
+    if (failed) { setLocal(k, was); syncErr = true; render(false); }   // put it back: it was not saved
+    if (!pending) pull();
+  }
+
+  async function start() {
+    loadLocal();
+    render(false);
+    if (!online) return;
+    try {
+      let data = await req("GET", "");
+      if (!lsGet(UPLOADED_KEY)) {                       // first time here: send this browser's old days up
+        if (done.length) {
+          const map = {};
+          done.forEach(k => { map[k] = true; });
+          await req("PATCH", "done", map);
+        }
+        if (bestBase > ((data && +data.bestBase) || 0)) await req("PATCH", "", { bestBase: bestBase });
+        lsSet(UPLOADED_KEY, "1");
+        data = await req("GET", "");
+      }
+      applyRemote(data);
+    } catch (e) { syncErr = true; render(false); }
+
+    // live updates: redraw whenever anyone changes a day
+    if (window.EventSource) {
+      const es = new EventSource(url(""));
+      es.addEventListener("put", pull);
+      es.addEventListener("patch", pull);
+    }
+    setInterval(pull, 60000);                           // safety net if the live connection drops
+  }
+
+  // ---------- the rule ----------
+  // The streak is the number of logged days in your current run.
+  // One missed day is fine. Two missed days in a row break the run:
+  // on the third day the streak is back to 0.
+  function computeStreak(days, today) {
+    if (!days.length) return { streak: 0, last: null, gap: null };
+    const last = days[days.length - 1];
+    const gap = dayNum(today) - dayNum(last);          // days since you last logged
+    if (gap >= 3) return { streak: 0, last: last, gap: gap };
+    let count = 1;
+    for (let i = days.length - 2; i >= 0; i--) {
+      if (dayNum(days[i + 1]) - dayNum(days[i]) >= 3) break;
+      count++;
+    }
+    return { streak: count, last: last, gap: gap };
+  }
+
+  // The longest streak uses the same rule, looking at every run you have ever had.
+  function longestStreak(days) {
+    let best = 0, run = 0;
+    for (let i = 0; i < days.length; i++) {
+      if (i > 0 && dayNum(days[i]) - dayNum(days[i - 1]) >= 3) run = 0;
+      run++;
+      if (run > best) best = run;
+    }
+    return best;
+  }
+
+  // ---------- actions ----------
+  const toggle = k => setDay(k, done.indexOf(k) === -1);
+  const markToday = () => setDay(keyOf(new Date()), true);
+  const undoLatest = () => { if (done.length) setDay(done[done.length - 1], false); };
+
+  // ---------- drawing ----------
+  const $ = id => document.getElementById(id);
+  const numEl = $("num"), unitEl = $("unit"), flame = $("flame"), statusEl = $("status"),
+        stripEl = $("strip"), minus = $("minus"), plus = $("plus"), noteEl = $("note"),
+        rangeEl = $("range"), older = $("older"), newer = $("newer"), bestEl = $("best");
+  let offset = 0;          // how many days the strip is moved back from today
+
+  function render(bump) {
+    const today = keyOf(new Date());
+    const hasToday = done.indexOf(today) !== -1;
+    const r = computeStreak(done, today);
+
+    numEl.textContent = r.streak;
+    bestEl.textContent = Math.max(bestBase, longestStreak(done));
+    unitEl.textContent = r.streak === 1 ? "day" : "days";
+    if (bump) { numEl.classList.remove("bump"); void numEl.offsetWidth; numEl.classList.add("bump"); }
+
+    flame.classList.toggle("off", r.streak <= 0);
+    minus.disabled = !done.length;
+    plus.disabled = hasToday;
+
+    let text, cls = "";
+    if (!done.length) {
+      text = "Tap to start streak";
+    } else if (r.streak === 0) {
+      text = "Streak reset: " + (r.gap - 1) + " days in a row were missed. Mark a day to start again.";
+      cls = "warn";
+    } else if (r.gap === 0) {
+      text = "Today is logged. Keep it going."; cls = "good";
+    } else if (r.gap === 2) {
+      text = "You missed yesterday. Log today or the streak resets tomorrow."; cls = "warn";
+    } else {
+      text = "Today isn't logged yet.";
+    }
+    statusEl.textContent = text;
+    statusEl.className = "status " + cls;
+
+    // 14-day strip, ending `offset` days before today
+    const first = done.length ? done[0] : null;
+    stripEl.innerHTML = "";
+    for (let i = 13; i >= 0; i--) {
+      const d = daysAgo(offset + i), k = keyOf(d);
+      let c = "cell";
+      const isDone = done.indexOf(k) !== -1;
+      if (isDone) c += " done";
+      else if (first && k >= first && k < today) c += " missed";
+      if (k === today) c += " now";
+
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = c;
+      cell.setAttribute("aria-pressed", isDone ? "true" : "false");
+      const full = d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "long" });
+      cell.title = full;
+      cell.setAttribute("aria-label", full + (isDone ? ", done" : ", not done"));
+      cell.innerHTML = '<span class="wd">' + d.toLocaleDateString([], { weekday: "narrow" }) +
+                       '</span><span class="dn">' + d.getDate() + '</span>';
+      cell.addEventListener("click", () => toggle(k));
+      stripEl.appendChild(cell);
+    }
+
+    const a = daysAgo(offset + 13), b = daysAgo(offset);
+    const fmt = { month: "short", day: "numeric" };
+    rangeEl.textContent = a.toLocaleDateString([], fmt) + " – " + b.toLocaleDateString([], fmt);
+    newer.disabled = offset === 0;
+    older.disabled = offset >= 364;
+
+    if (!online) {
+      noteEl.textContent = "Not connected to the shared database yet, so days are only saved in this browser.";
+      noteEl.hidden = false;
+    } else if (syncErr) {
+      noteEl.textContent = "Can't reach the shared database right now. Your last change may not be saved.";
+      noteEl.hidden = false;
+    } else {
+      noteEl.hidden = true;
+    }
+  }
+
+  minus.addEventListener("click", undoLatest);
+  plus.addEventListener("click", markToday);
+  older.addEventListener("click", () => { offset = Math.min(364, offset + 7); render(false); });
+  newer.addEventListener("click", () => { offset = Math.max(0, offset - 7); render(false); });
+
+  // refresh when the day changes (midnight) or the tab comes back
+  let shownDay = keyOf(new Date());
+  function tick() {
+    const day = keyOf(new Date());
+    if (day !== shownDay) { shownDay = day; render(false); }
+  }
+  setInterval(tick, 30000);
+  document.addEventListener("visibilitychange", () => { tick(); if (!document.hidden) pull(); });
+
+  start();
+})();
+</script>
+</body>
+</html>
